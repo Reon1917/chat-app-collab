@@ -1,34 +1,57 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+
+// Lazy load pages for better performance
+const Login = lazy(() => import('./pages/auth/Login'))
+const Register = lazy(() => import('./pages/auth/Register'))
+const Chat = lazy(() => import('./pages/chat/Chat'))
+const Profile = lazy(() => import('./pages/profile/Profile'))
+
+// Loading component for suspense fallback
+const LoadingSpinner = () => (
+  <div className="flex h-screen w-screen items-center justify-center">
+    <div className="loading loading-spinner loading-lg text-primary"></div>
+  </div>
+)
 
 function App() {
-  const [count, setCount] = useState(0)
+  // TODO: Replace with actual auth check
+  const isAuthenticated = false
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <Router>
+      <Suspense fallback={<LoadingSpinner />}>
+        <div className="min-h-screen bg-base-100">
+          <Routes>
+            {/* Public Routes */}
+            <Route 
+              path="/login" 
+              element={!isAuthenticated ? <Login /> : <Navigate to="/chat" />} 
+            />
+            <Route 
+              path="/register" 
+              element={!isAuthenticated ? <Register /> : <Navigate to="/chat" />} 
+            />
+            
+            {/* Protected Routes */}
+            <Route 
+              path="/chat/*" 
+              element={isAuthenticated ? <Chat /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/profile" 
+              element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} 
+            />
+            
+            {/* Default redirect */}
+            <Route 
+              path="*" 
+              element={<Navigate to={isAuthenticated ? "/chat" : "/login"} />} 
+            />
+          </Routes>
+        </div>
+      </Suspense>
+    </Router>
   )
 }
 
